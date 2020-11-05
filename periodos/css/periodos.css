@@ -1,0 +1,47 @@
+
+
+.contenedor-periodos {
+    position: relative;
+    float: left;
+    /*width: 1240px;*/
+    height: 20px;    
+    
+    border-right: 1px solid red;
+    border-left: 1px solid red;    
+}
+
+.periodo-con-valor {
+    position: absolute;
+    top: 0px;
+    height: 20px;
+    background-color: aliceblue;
+    font-size: 10px;
+    font-family: sans-serif;
+    text-align: center;
+    vertical-align: middle;    
+    border: 1px dotted;
+}
+
+.periodo-sin-valor {
+    position: absolute;
+    top: 0px;
+    height: 20px;
+    background-color: gainsboro;
+    font-size: 10px;
+    font-family: sans-serif;
+    text-align: center;
+    vertical-align: middle;    
+    border: 1px dotted;    
+}
+
+.parent {
+    position: relative;
+    margin-top: 0px;
+}
+.child {
+    position: absolute;
+    top: 0px;
+    width: 200px;
+    height: 10px;
+    background-color: blue;
+}

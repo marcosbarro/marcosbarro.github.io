@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Listas de Periodo-Valor Normalizadas</title>
+
+
+<script>
+   var ANCHO = 1240;
+   
+
+   // devuelve un array de n períodos aleatorios para el día especificado
+   function generarPeriodosAleatorios(n, dia) {
+      var aleatorio = new indigo.common.util.Random();
+      var periodos = [];
+      var fecha = new Date(dia);
+      var hh; // hora de comienzo de período
+      var mm; // minuto de comienzo del período
+      var duracion; // duración del período
+      
+      for (var i = 0; i < n; i++) {
+          hh = aleatorio.getInteger(0, 23);
+          mm = aleatorio.getArrayItem([0, 15, 30, 45]);
+          duracion = 1000 * 60 * 15 * aleatorio.getInteger(1, 16); // entre 15 min y 2 horas
+          
+          fecha.setHours(hh);
+          fecha.setMinutes(mm);
+          fecha.setSeconds(0);
+          fecha.setMilliseconds(0);
+          var valor = aleatorio.getInteger(1,9);
+          var np = new indigo.common.model.Periodo(fecha.getTime(), fecha.getTime() + duracion, valor);
+          periodos.push(np);
+      }
+      
+      return periodos;
+   }
+   
+   // devuelve un objeto PeriodosNormalizadosList desde las cero horas del día (dia) especificado
+   // hasta las cero horas del día siguiente con la lista de períodos normalizados correspondientes
+   // al array de períodos especificado (pa) 
+   function generarListaPeriodos(pa, dia) {
+      var fecha = new Date(dia);
+      fecha.setHours(0);
+      fecha.setMinutes(0);
+      fecha.setSeconds(0);
+      fecha.setMilliseconds(0);
+      
+      var plist = new indigo.common.model.PeriodosNormalizadosList(fecha.getTime(), fecha.getTime() + 1000 * 60 * 60 * 24);
+      
+      // descomentar las siguientes líneas en caso querer sobreescribir la función que suma los 
+      // valores de los períodos (en este caso, devolviendo el doble de la suma de los dos valores) 
+      //plist.sumarValores = function(v1, v2) {
+      //   if (!v1) return v2;
+      //   if (!v2) return v1;                               
+      //   return 2*(v1 + v2);
+      //};  
+      
+      for (var i = 0; i < pa.length; i++) {
+          plist.agregar(pa[i]);          
+      }   
+      
+      return plist;
+   }
+   
+   function ejecutarTest() {
+      var fecha = new Date();
+      var html = "";
+      var inicio = new Date().getTime();
+      var contador = 1; // números de pruebas a realizar en cada ejecución del test
+      
+      for (var k = 0; k < contador; k++) {
+          var periodosAleatorios = generarPeriodosAleatorios(10, fecha);
+          var periodosList = generarListaPeriodos(periodosAleatorios, fecha);
+          var periodosNormalizados = periodosList.periodos;
+           
+          var celdasHorarias = indigo.common.model.CeldaHoraria.crearCeldasHorarias(periodosList.desde, periodosList.hasta, 1000*60*60, periodosNormalizados);
+           
+          
+          // separador
+          html += '<div style="float:left; border-top: 1px solid grey; width:100%; margin-top:10px;"></div>';
+          
+          /**/
+          // generar HTML períodos original
+          for (var i = 0; i < periodosAleatorios.length; i++) {
+              html +=  getHtmlPeriodo(periodosAleatorios[i], periodosList, true);     
+          }      
+          
+          // separador
+          html += '<div style="float:left; border: 1px solid blue; width:100%; margin-top:4px;"></div>';
+          /**/
+          
+          // generar HTML períodos normalizados
+          html += '<div class="contenedor-periodos" style="width:' + ANCHO + 'px">';
+          for (var i = 0; i < periodosNormalizados.length; i++) {
+              html +=  getHtmlPeriodo(periodosNormalizados[i], periodosList, false);     
+          }         
+          html += '</div>';      
+          
+          // separador
+          html += '<div style="float:left; border: 1px solid blue; width:100%; margin-top:2px;"></div>';
+          
+           
+          // generar celdas horarias
+          html += '<div class="contenedor-periodos" style="width:' + ANCHO + 'px">';
+          for (var i = 0; i < celdasHorarias.length; i++) {
+              html +=  getHtmlInfoCelda(celdasHorarias[i], periodosList);     
+          }         
+          html += '</div>'; 
+          
+          html += '<div class="contenedor-periodos" style="width:' + ANCHO + 'px">';
+          for (var i = 0; i < celdasHorarias.length; i++) {
+              html +=  getHtmlCeldaHoraria(celdasHorarias[i], periodosList);     
+          }         
+          html += '</div>';        
+           
+          
+          // separador
+          html += '<div style="float:left; border: 1px solid blue; width:100%; margin-top:2px;"></div>';
+          
+      }
+
+      // mostrar tiempo
+      var segundos = ((new Date().getTime() - inicio)/1000).toFixed(2);
+      //html = "<hr/> TIEMPO EJECUCION: " + segundos + " segundos <br/>" ;//+ html;
+           
+      mostrarResultado(html);
+      
+      //mostrarResultado("[Resultado lista periodos] <br/>duracion total: " + duracionTotal + "<br/>duracion huecos: " + duracionSinValor + "<br/>duracion con valores: " + duracionConValor);
+   }
+   
+   function formatoHHMM(ts) {
+       var d = new Date(ts);
+       var ceros = "00";
+       var hh = ceros + d.getHours();
+       hh = hh.substr(hh.length - ceros.length, 2);
+       
+       var mm = ceros + d.getMinutes();
+       mm = mm.substr(mm.length - ceros.length, 2);
+       
+       return hh + ":" + mm;
+   }
+   
+   function mostrarResultado(resultado) {
+      var er = document.getElementById("div-resultado");
+      er.innerHTML = resultado;
+      
+      er = document.getElementById("testButton");
+      er.value = "REPETIR TEST";
+   }
+   
+   function calcularProporcion(valorDimension, dimensionMaximo, maximo) {
+        var proporcion = valorDimension/dimensionMaximo;
+        return Math.round(maximo * proporcion);
+   }   
+   
+   function getHtmlPeriodo(p, pl, conContenedor) {
+       var resultado = "";
+       if (conContenedor) {
+          resultado += '<div class="contenedor-periodos" style="width:' + ANCHO + 'px">';
+       }
+       
+       var vWidth = calcularProporcion(p.getDuracion(), pl.getDuracionTotal(), ANCHO);
+       var vLeft = calcularProporcion(p.desde - pl.desde, pl.getDuracionTotal(), ANCHO);
+       var vClass = "";
+       var vText = "";
+       if (!p.valor) {
+           vClass = "periodo-sin-valor";
+       }
+       else {
+           vClass = "periodo-con-valor";
+           vText = p.valor;
+       }
+       var vTitle = vText;
+       if (vTitle != "") {
+          vTitle = "valor: " + vTitle;
+       };
+       vTitle += " (" + formatoHHMM(p.desde) + " - " + formatoHHMM(p.hasta) + ")";
+                      
+       
+       resultado += '<div class="' + vClass + '" title="' + vTitle + '" style="width:' + vWidth + 'px; left:' + vLeft + 'px;">' + vText + '</div>';
+       
+       if (conContenedor) {
+          resultado += '</div>';
+       }       
+       
+       return resultado;
+   }
+   
+   function getHtmlCeldaHoraria(c, pl) {
+       var resultado = "";
+       var periodos = c.periodos;
+       
+       for (var i=0; i < periodos.length; i++) {
+           var p = periodos[i];
+           var vWidth = calcularProporcion(p.getDuracion(), pl.getDuracionTotal(), ANCHO);
+           var vLeft = calcularProporcion(p.desde-pl.desde, pl.getDuracionTotal(), ANCHO);
+           var vClass = "";
+           var vText = "";
+           if (!p.valor) {
+               vClass = "periodo-sin-valor";
+           }
+           else {
+               vClass = "periodo-con-valor";
+               vText = p.valor;
+           }
+           var vTitle = vText;
+           if (vTitle != "") {
+              vTitle = "valor: " + vTitle;
+           };
+           vTitle += " (" + formatoHHMM(p.desde) + " - " + formatoHHMM(p.hasta) + ")";
+                      
+           resultado += '<div class="' + vClass + '" title="' + vTitle + '" style="width:' + vWidth + 'px; left:' + vLeft + 'px;">' + vText + '</div>';       
+       }            
+       return resultado;
+   }   
+   
+   function getHtmlInfoCelda(c, pl) {
+       var resultado = "";      
+
+       var vWidth = calcularProporcion(c.getDuracion(), pl.getDuracionTotal(), ANCHO);
+       var vLeft = calcularProporcion(c.desde - pl.desde, pl.getDuracionTotal(), ANCHO);
+       var vClass = "";
+       var vText = formatoHHMM(c.desde);
+       
+       
+       resultado += '<div class="periodo-con-valor"style="width:' + vWidth + 'px; left:' + vLeft + 'px;background-color:linen;border-color:red">' + vText + '</div>';       
+                   
+       return resultado;
+   }     
+</script>
+
+<link rel="stylesheet" type="text/css" href="css/periodos.css">
+
+</head>
+<body>
+
+
+<script src="./js/indigo.common.model.Periodo.js"></script>
+<script src="./js/indigo.common.model.PeriodosNormalizadosList.js"></script>
+<script src="./js/indigo.common.model.CeldaHoraria.js"></script>
+<script src="./js/indigo.common.util.js"></script>
+
+<h1>Listas de Periodo-Valor Normalizadas</h1>
+<div id="div-info" style="float: left;width:100%">
+<p>Al ejecutar el TEST, se generan tres bloques con periodos-valor con inicio desde las cero horas del dia actual hasta las cero horas del dia siguiente:
+  <ul>
+     <li>El bloque superior contiene una lista de 10 periodos-valor generados aleatoriamente. El valor es el numero mostrado en cada periodo</li>
+     <li>En el bloque central se nuestra la <b>lista de periodos-valor normalizada equivalente</b> (los valores de periodos solapados simplemente se suman)</li>
+     <li>El bloque inferior es solo informativo para mostrar la lista de periodos-valor normalizada partida en las 24 horas del dia. Realmente no es una lista normalizada (puede tener periodos contiguos con el mismo valor), sino un ejemplo de como se puede hacer uso de una lista normalizada.</li>
+  </ul>
+</p>
+</div>
+
+<input id="testButton" type="button" value="EJECUTAR TEST" onclick="ejecutarTest()" />
+<br/>
+<div id="div-resultado" style="float: left;"></div>
+
+
+
+</body>
+
+</html>
