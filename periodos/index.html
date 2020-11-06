@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Listas de Periodo-Valor Normalizadas</title>
+<title>Listas de Periodos Valor Normalizadas</title>
 
 
 <script>
@@ -17,20 +17,23 @@
       var mm; // minuto de comienzo del período
       var duracion; // duración del período
       
-      for (var i = 0; i < n; i++) {
-          hh = aleatorio.getInteger(0, 23);
+      while (periodos.length < n) {
+          hh = aleatorio.getInteger(0, 11);
           mm = aleatorio.getArrayItem([0, 15, 30, 45]);
-          duracion = 1000 * 60 * 15 * aleatorio.getInteger(1, 16); // entre 15 min y 2 horas
+          duracion = 1000 * 60 * 15 * aleatorio.getInteger(1, 8); // entre 15 min y 2 horas
           
           fecha.setHours(hh);
           fecha.setMinutes(mm);
           fecha.setSeconds(0);
           fecha.setMilliseconds(0);
-          var valor = aleatorio.getInteger(1,9);
+          var valor = aleatorio.getInteger(1,19);
           var np = new indigo.common.model.Periodo(fecha.getTime(), fecha.getTime() + duracion, valor);
-          periodos.push(np);
+          if ((new Date(np.getHasta())).getHours() < 12 ) {
+             periodos.push(np);
+          }      
       }
       
+
       return periodos;
    }
    
@@ -44,7 +47,7 @@
       fecha.setSeconds(0);
       fecha.setMilliseconds(0);
       
-      var plist = new indigo.common.model.PeriodosNormalizadosList(fecha.getTime(), fecha.getTime() + 1000 * 60 * 60 * 24);
+      var plist = new indigo.common.model.PeriodosNormalizadosList(fecha.getTime(), fecha.getTime() + 1000 * 60 * 60 * 12);
       
       // descomentar las siguientes líneas en caso querer sobreescribir la función que suma los 
       // valores de los períodos (en este caso, devolviendo el doble de la suma de los dos valores) 
@@ -68,7 +71,7 @@
       var contador = 1; // números de pruebas a realizar en cada ejecución del test
       
       for (var k = 0; k < contador; k++) {
-          var periodosAleatorios = generarPeriodosAleatorios(10, fecha);
+          var periodosAleatorios = generarPeriodosAleatorios(20, fecha);
           var periodosList = generarListaPeriodos(periodosAleatorios, fecha);
           var periodosNormalizados = periodosList.periodos;
            
@@ -239,24 +242,22 @@
 <script src="./js/indigo.common.model.CeldaHoraria.js"></script>
 <script src="./js/indigo.common.util.js"></script>
 
-<h1>Listas de Periodo-Valor Normalizadas</h1>
+<h1>Listas de Periodos Valor Normalizadas</h1>
+
 <div id="div-info" style="float: left;width:100%">
-<a href="./files/listas_normalizadas_periodos_valor_v01.pdf">
- <img border="0" alt="tratamiento de valores periodificados con listas normalizadas" src="./images/pdf1.png" width="50" height="50">
-</a>
-<p>Al ejecutar el TEST, se muestran tres bloques con periodos-valor, todos con inicio entre las cero horas del dia actual y las cero horas del dia siguiente:
-  <ul>
-     <li>El bloque superior contiene una lista de 10 periodos-valor generados aleatoriamente. El valor es el numero mostrado en cada periodo</li>
-     <li>En el bloque central se nuestra la <b>lista de periodos-valor normalizada equivalente</b> en el intervalo entre las cero horas del dia actual y las del dia siguiente. Los valores de periodos solapados simplemente se suman.</li>
-     <li>El bloque inferior es solo informativo para mostrar la lista de periodos-valor normalizada partida en cada hora del dia. Realmente no es una lista normalizada (puede tener periodos contiguos con el mismo valor), sino un ejemplo de como se puede hacer uso de una lista normalizada.</li>
-  </ul>
-</p>
+    <input id="testButton" type="button" value="EJECUTAR TEST" onclick="ejecutarTest()" style="width:240px;background-color:white" />
+    
+    <a href="./pages/info.html">
+    <input id="infoButton" type="button" value="INFO TEST"   style="width:240px;background-color:white" />
+    </a>
+    
+    <a href="./files/listas_normalizadas_periodos_valor_v01.pdf">
+    <input id="docButton" type="button" value="DOCUMENTO TECNICO"  style="width:240px;background-color:white"
+
 </div>
 
-<input id="testButton" type="button" value="EJECUTAR TEST" onclick="ejecutarTest()" />
-<br/>
-<div id="div-resultado" style="float: left;"></div>
-
+<div id="div-resultado" style="float: left;">
+</div>
 
 
 </body>
